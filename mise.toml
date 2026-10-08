@@ -1,0 +1,27 @@
+[tools]
+# 与 CI 的 Python 3.13 主版本一致，固定补丁版本便于复现。
+python = "3.13.16"
+
+[tasks.test]
+description = "运行全部程序回归测试，不调用外部模型"
+run = "python -m unittest discover -s tests -v"
+
+[tasks.evaluate]
+description = "查看合成命名案例；只有显式传入 --live 才调用模型"
+run = "python scripts/evaluate_naming.py"
+
+[tasks.check]
+description = "运行本地测试与合成案例检查，不调用外部模型"
+depends = ["test", "evaluate"]
+
+[tasks.doctor]
+description = "只读检查 Python、Codex CLI 和 App Server，不调用模型"
+run = "python scripts/oil_codex_title.py doctor"
+
+[tasks.title]
+description = "运行话题命名 CLI，后接子命令与参数"
+run = "python scripts/oil_codex_title.py"
+
+[tasks.archive]
+description = "运行归档策略 CLI，后接子命令与参数"
+run = "python scripts/archive_policy.py"
