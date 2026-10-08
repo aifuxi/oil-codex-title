@@ -16,15 +16,16 @@ import time
 import unicodedata
 import uuid
 
-from codex_adapter import BackendError, ModelSkipped, CodexBackend, find_codex, generate_title, process_options
+from codex_adapter import BackendError, ModelSkipped, CodexBackend, find_codex, generate_title, process_options, validate_model_config
 import file_lock
-from usage_ledger import usage_scope, usage_report
+from usage_ledger import usage_scope, usage_report, record_duration, timed_call, retrying, shared_deadline
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULTS = {
     "enabled": True,
     "model": "gpt-5.6-luna",
     "service_tier": "priority",
+    "reasoning_effort": "low",
     "codex_bin": None,
     "recent_turns": 5,
     "max_context_chars": 14000,
@@ -33,6 +34,25 @@ DEFAULTS = {
 }
 EMOJI = ("🎬", "🧩", "🔎", "📝", "📅", "🎨", "⚙️", "💬")
 POLICY_VERSION = 8
+MODEL_KEYS = ("model", "reasoning_effort", "service_tier")
+REASONING_EFFORTS = ("none", "minimal", "low", "medium", "high", "xhigh", "max")
+
+
+def naming_config(config):
+    """只覆盖命名调用；顶层模型设置继续供归档使用。"""
+    override = {k: v for k, v in config.get("naming", {}).items() if k in MODEL_KEYS}
+    if override.get("model", config["model"]) != config["model"] and "service_tier" not in override:
+        override["service_tier"] = None
+    return config | override
+
+
+def validate_settings(config):
+    if not isinstance(config["model"], str) or not config["model"].strip():
+        raise ValueError("model 不能为空")
+    if config.get("reasoning_effort", "low") not in REASONING_EFFORTS:
+        raise ValueError("reasoning_effort 不合法")
+    if config["service_tier"] not in (None, "priority"):
+        raise ValueError("service_tier 必须是 null（标准）或 priority（Fast）")
 
 
 def data_dir():
@@ -74,10 +94,10 @@ def load_config(root):
                               ("model_timeout_seconds", 10, 110), ("max_parallel_workers", 1, 8)):
         if type(config[key]) is not int or not lower <= config[key] <= upper:
             raise ValueError(f"{key} 必须在 {lower}～{upper} 之间")
-    if not isinstance(config["model"], str) or not config["model"].strip():
-        raise ValueError("model 不能为空")
-    if config["service_tier"] not in (None, "priority"):
-        raise ValueError("service_tier 必须是 null（标准）或 priority（Fast）")
+    if not isinstance(config.get("naming", {}), dict):
+        raise ValueError("naming 必须是对象")
+    validate_settings(config)
+    validate_settings(naming_config(config))
     return config
 
 
@@ -86,8 +106,9 @@ def valid_id(value):
 
 
 @contextmanager
-def thread_lock(root, thread_id, wait_seconds=0):
+def thread_lock(root, thread_id, wait_seconds=0, *, record_wait=True):
     # 内核锁在进程结束后释放，避免崩溃留下永久锁或两个 Worker 覆盖结果。
+    started = time.perf_counter()
     path = root / "locks" / (thread_id + ".lock")
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a+b") as stream:
@@ -98,9 +119,13 @@ def thread_lock(root, thread_id, wait_seconds=0):
                 break
             except BlockingIOError:
                 if time.monotonic() >= deadline:
+                    if record_wait:
+                        record_duration("thread_lock_wait", started)
                     yield False
                     return
                 time.sleep(min(0.2, max(0, deadline - time.monotonic())))
+        if record_wait:
+            record_duration("thread_lock_wait", started)
         try:
             yield True
         finally:
@@ -110,43 +135,56 @@ def thread_lock(root, thread_id, wait_seconds=0):
 @contextmanager
 def worker_slot(root, limit, wait_seconds):
     """不同话题共享进程池配额，等待时间算入模型预算。"""
+    started = time.perf_counter()
     deadline = time.monotonic() + wait_seconds
     while True:
         for index in range(limit):
-            with thread_lock(root / "worker-pool", str(index)) as acquired:
+            with thread_lock(root / "worker-pool", str(index), record_wait=False) as acquired:
                 if acquired:
+                    record_duration("worker_wait", started)
                     yield True
                     return
         if time.monotonic() >= deadline:
+            record_duration("worker_wait", started)
             yield False
             return
         time.sleep(min(0.1, max(0, deadline - time.monotonic())))
 
 
 def limited_title(binary, root, config, context, *, before_model=None):
-    deadline = time.monotonic() + config["model_timeout_seconds"]
-    with worker_slot(root, config["max_parallel_workers"], config["model_timeout_seconds"]) as acquired:
+    config = naming_config(config)
+    deadline = shared_deadline(config["model_timeout_seconds"])
+    remaining = max(0, deadline - time.monotonic())
+    if remaining <= 0:
+        raise BackendError("命名时间预算已耗尽；原标题保留")
+    with worker_slot(root, config["max_parallel_workers"], remaining) as acquired:
         remaining = deadline - time.monotonic()
-        if not acquired or remaining <= 0:
+        if not acquired:
             raise BackendError("后台命名并发已满；本次保留原标题")
+        if remaining <= 0:
+            raise BackendError("命名时间预算已耗尽；原标题保留")
         return generate_title(binary, {**config, "model_timeout_seconds": remaining}, context, ROOT,
                               before_model=before_model)
 
 
 def ensure_title_active(backend, thread_id, root):
-    if backend.is_archived(thread_id):
+    if timed_call("state_check", backend.is_archived, thread_id):
         raise ModelSkipped("archived")
-    if not load_config(root)["enabled"]:
-        raise ModelSkipped("disabled")
-    if read_json(state_path(root, thread_id)).get("locked"):
-        raise ModelSkipped("locked")
+    started = time.perf_counter()
+    try:
+        if not load_config(root)["enabled"]:
+            raise ModelSkipped("disabled")
+        if read_json(state_path(root, thread_id)).get("locked"):
+            raise ModelSkipped("locked")
+    finally:
+        record_duration("state_check", started)
 
 
 def read_settled_thread(backend, thread_id, event_turn, timeout=5):
     """确认 Stop 对应轮次已完成；异步保存尚未完成时短暂轮询。"""
     deadline = time.monotonic() + timeout
     while True:
-        thread = backend.read(thread_id)
+        thread = timed_call("host_read", backend.read, thread_id)
         turns = thread.get("turns", [])
         if not turns or turns[-1]["id"] != event_turn:
             return thread, "outdated_event"
@@ -335,10 +373,12 @@ def confirmation_only(thread, state, config):
     return len(pending)
 
 
-def process_thread(backend, generator, thread_id, root, config, *, apply=False, event_turn=None):
-    with usage_scope(root, "naming", thread_id) as accounting:
+def process_thread(backend, generator, thread_id, root, config, *, apply=False, event_turn=None,
+                   started_at=None, initial_timings=None):
+    with usage_scope(root, "naming", thread_id, started_at=started_at, initial_timings=initial_timings) as accounting:
         result = _process_thread(backend, generator, thread_id, root, config, apply=apply, event_turn=event_turn)
         accounting.outcome = result["status"]
+        result["performance"] = accounting.metrics()
         return result
 
 
@@ -352,14 +392,14 @@ def _process_thread(backend, generator, thread_id, root, config, *, apply=False,
             return {"status": "busy"}
         path = state_path(root, thread_id)
         state = read_json(path)
-        if backend.is_archived(thread_id):
+        if timed_call("state_check", backend.is_archived, thread_id):
             return {"status": "archived"}
         if event_turn:
             thread, pending = read_settled_thread(backend, thread_id, event_turn)
             if pending:
                 return {"status": pending}
         else:
-            thread = backend.read(thread_id)
+            thread = timed_call("host_read", backend.read, thread_id)
         before = snapshot(thread, config)
         if not before["has_messages"]:
             return {"status": "empty"}
@@ -401,8 +441,9 @@ def _process_thread(backend, generator, thread_id, root, config, *, apply=False,
         if candidate["action"] == "rename" and conflicts:
             try:
                 ensure_title_active(backend, thread_id, root)
-                candidate, retry_usage = generator({**before["context"], "conflicting_titles": conflicts,
-                    "naming_feedback": "候选与已记录任务重名。用对话里真实的项目、模块或内容主题区分；无法区分就保留原名，不编造编号。"})
+                with retrying("conflict"):
+                    candidate, retry_usage = generator({**before["context"], "conflicting_titles": conflicts,
+                        "naming_feedback": "候选与已记录任务重名。用对话里真实的项目、模块或内容主题区分；无法区分就保留原名，不编造编号。"})
             except ModelSkipped as exc:
                 return {"status": exc.status, "usage": usage}
             candidate = validate_candidate(candidate, before["title"])
@@ -422,9 +463,9 @@ def _process_thread(backend, generator, thread_id, root, config, *, apply=False,
         latest_state = read_json(path)
         if latest_state.get("locked"):
             return {"status": "locked"}
-        if backend.is_archived(thread_id):
+        if timed_call("state_check", backend.is_archived, thread_id):
             return {"status": "archived"}
-        after = snapshot(backend.read(thread_id), config)
+        after = snapshot(timed_call("host_read", backend.read, thread_id), config)
         if after["title"] != before["title"] or after["fingerprint"] != before["fingerprint"]:
             return {"status": "stale_result"}
         state.update(last_seen_title=before["title"], last_turn_id=before["latest_id"],
@@ -435,12 +476,12 @@ def _process_thread(backend, generator, thread_id, root, config, *, apply=False,
             state["pending_title"] = candidate["title"]
             atomic_json(path, state)
             try:
-                backend.rename(thread_id, candidate["title"])
+                timed_call("title_write", backend.rename, thread_id, candidate["title"])
             except BackendError:
                 # 网络/进程错误可能发生在写入成功后，先读回确认，不盲目重试。
-                if snapshot(backend.read(thread_id), config)["title"] != candidate["title"]:
+                if snapshot(timed_call("title_verify", backend.read, thread_id), config)["title"] != candidate["title"]:
                     raise
-            verified = snapshot(backend.read(thread_id), config)
+            verified = snapshot(timed_call("title_verify", backend.read, thread_id), config)
             if verified["title"] != candidate["title"]:
                 raise BackendError("标题写入后核验不一致")
             state.update(last_seen_title=candidate["title"], last_generated_title=candidate["title"])
@@ -485,6 +526,7 @@ def doctor(binary, root, config, thread_id=None):
 
 
 def main():
+    started = time.perf_counter()
     # Hook 事件使用 UTF-8；不能依赖 Windows 当前代码页解释中文内容。
     for stream in (sys.stdin, sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
@@ -502,6 +544,9 @@ def main():
     p.add_argument("--model")
     p.add_argument("--codex-bin")
     p.add_argument("--service-tier", choices=("standard", "fast"))
+    p.add_argument("--naming-model")
+    p.add_argument("--naming-reasoning-effort", choices=REASONING_EFFORTS)
+    p.add_argument("--naming-service-tier", choices=("standard", "fast"))
     for name in ("rename", "lock", "unlock"):
         p = sub.add_parser(name)
         p.add_argument("thread_id")
@@ -538,11 +583,27 @@ def main():
                     changes["codex_bin"] = find_codex(args.codex_bin)
                 if args.service_tier:
                     changes["service_tier"] = "priority" if args.service_tier == "fast" else None
+                if any((args.naming_model, args.naming_reasoning_effort, args.naming_service_tier)):
+                    naming = dict(changes.get("naming", {}))
+                    if args.naming_model:
+                        if args.naming_model != naming_config(config)["model"] and not args.naming_service_tier:
+                            naming["service_tier"] = None
+                        naming["model"] = args.naming_model
+                    if args.naming_reasoning_effort:
+                        naming["reasoning_effort"] = args.naming_reasoning_effort
+                    if args.naming_service_tier:
+                        naming["service_tier"] = "priority" if args.naming_service_tier == "fast" else None
+                    changes["naming"] = naming
+                    selected = naming_config(DEFAULTS | changes)
+                    validate_settings(selected)
+                    with CodexBackend(find_codex(changes.get("codex_bin", config["codex_bin"]))) as backend:
+                        validate_model_config(backend, selected)
             atomic_json(config_path, changes)
             print(json.dumps(load_config(root), ensure_ascii=False))
             return 0
         if args.command == "status":
             print(json.dumps({"config": config, "data_dir": str(root),
+                              "effective_naming": {k: naming_config(config)[k] for k in MODEL_KEYS},
                               "tracked_threads": len(list((root / "threads").glob("*.json")))}, ensure_ascii=False))
             return 0
         if args.command == "usage":
@@ -553,7 +614,9 @@ def main():
             result = doctor(binary, root, config, args.thread)
         else:
             thread_id = thread_id or valid_id(args.thread_id)
+            connection_started = time.perf_counter()
             with CodexBackend(binary) as backend:
+                connection_seconds = time.perf_counter() - connection_started
                 if args.command in ("lock", "unlock"):
                     with thread_lock(root, thread_id) as acquired:
                         if not acquired:
@@ -572,6 +635,7 @@ def main():
                             before_model=lambda: ensure_title_active(backend, thread_id, root)),
                         thread_id, root, config, apply=is_hook or args.apply,
                         event_turn=turn_id if is_hook else None,
+                        started_at=started, initial_timings={"connection": connection_seconds},
                     )
                     if is_hook and result["status"] not in ("renamed", "kept"):
                         audit(root, thread_id, result)

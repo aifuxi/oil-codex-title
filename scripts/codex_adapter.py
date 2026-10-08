@@ -13,7 +13,7 @@ import sys
 import tempfile
 import threading
 import time
-from usage_ledger import begin_attempt, parse_usage
+from usage_ledger import begin_attempt, parse_usage, measure, model_phase, retrying, shared_deadline
 
 
 class BackendError(RuntimeError):
@@ -204,6 +204,32 @@ SCHEMA = {
 }
 
 
+def validate_model_config(backend, config):
+    """配置或显式评测时检查账号能力；不在每轮 Hook 增加模型列表请求。"""
+    cursor, seen = None, set()
+    while True:
+        params = {"includeHidden": True}
+        if cursor:
+            params["cursor"] = cursor
+        page = backend.call("model/list", params)
+        for model in page["data"]:
+            if model.get("model") != config["model"] and model.get("id") != config["model"]:
+                continue
+            efforts = {e["reasoningEffort"] for e in model.get("supportedReasoningEfforts", [])}
+            if config.get("reasoning_effort", "low") not in efforts:
+                raise ValueError("所选模型不支持该推理档位")
+            tiers = {t["id"] for t in model.get("serviceTiers", [])}
+            if config.get("service_tier") and config["service_tier"] not in tiers:
+                raise ValueError("所选模型不支持该服务档位")
+            return
+        cursor = page.get("nextCursor")
+        if not cursor:
+            raise ValueError("当前账号的模型列表中没有所选模型")
+        if cursor in seen:
+            raise BackendError("模型列表分页游标重复")
+        seen.add(cursor)
+
+
 def normalize_project_prefix(candidate, context):
     """去掉与外层目录精确等价的重复前缀，不猜项目别名或修改 keep。"""
     hint = re.sub(r"[\W_]+", "", context.get("project_hint", ""))
@@ -238,7 +264,7 @@ def _generate_title_once(binary, config, context, plugin_root, *, before_model=N
 
 def generate_json(binary, config, context, policy, output_schema, *, before_model=None):
     """隔离的无工具临时模型，供命名和归档评估共用。"""
-    deadline = time.monotonic() + config["model_timeout_seconds"]
+    deadline = shared_deadline(config["model_timeout_seconds"])
     # 复用当前登录；不复制凭据，不恢复原会话，不保留独立会话记录。
     with tempfile.TemporaryDirectory(prefix="oil-codex-title-") as tmp:
         temp = Path(tmp)
@@ -250,7 +276,7 @@ def generate_json(binary, config, context, policy, output_schema, *, before_mode
             "--skip-git-repo-check", "--sandbox", "read-only", "-C", tmp,
             "--disable", "hooks", "--disable", "shell_tool",
             "--disable", "plugins", "--disable", "apps", "--disable", "multi_agent",
-            "-m", config["model"], "-c", 'model_reasoning_effort="low"',
+            "-m", config["model"], "-c", "model_reasoning_effort=" + json.dumps(config.get("reasoning_effort", "low")),
             "-c", "project_doc_max_bytes=0", "-c", "skills.max_context_tokens=1",
             "-c", "agents.enabled=false", "-c", 'web_search="disabled"',
             "-c", "apps._default.enabled=false",
@@ -269,9 +295,10 @@ def generate_json(binary, config, context, policy, output_schema, *, before_mode
         attempt = begin_attempt(config)
         usage, status = {}, "interrupted"
         try:
-            proc = subprocess.run(args, input=json.dumps(context, ensure_ascii=False),
-                                  capture_output=True, encoding="utf-8", env=worker_env(),
-                                  timeout=remaining, **process_options())
+            with measure(model_phase()):
+                proc = subprocess.run(args, input=json.dumps(context, ensure_ascii=False),
+                                      capture_output=True, encoding="utf-8", env=worker_env(),
+                                      timeout=remaining, **process_options())
             usage, forbidden_tool = parse_usage(proc.stdout)
             status = "process_error"
             if proc.returncode or not output.exists():
@@ -296,7 +323,11 @@ def generate_json(binary, config, context, policy, output_schema, *, before_mode
 
 
 def generate_title(binary, config, context, plugin_root, *, before_model=None):
-    deadline = time.monotonic() + config.get("model_timeout_seconds", 100)
+    deadline = shared_deadline(config.get("model_timeout_seconds", 100))
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise BackendError("命名时间预算已耗尽；原标题保留")
+    config = {**config, "model_timeout_seconds": remaining}
     candidate, usage = _generate_title_once(binary, config, context, plugin_root, before_model=before_model)
     current = context.get("current_title", "")
     legacy = current.count("｜") != 1 or current.startswith("🛠")
@@ -306,10 +337,11 @@ def generate_title(binary, config, context, plugin_root, *, before_model=None):
     if candidate.get("action") == "keep" and legacy and usage and remaining > 0:
         # 格式复核共享首次生成的时间预算，不能使 Hook 的最坏耗时翻倍。
         retry_config = {**config, "model_timeout_seconds": remaining}
-        candidate, retry_usage = _generate_title_once(binary, retry_config, {
-            **context,
-            "naming_feedback": "原标题尚未符合 emoji 对象｜目标结构，或仍使用旧开发图标。请重新核对：有明确对象和目标时只迁移格式，保留准确主线；只有依据不足时 keep。不要误称旧格式已合规。",
-        }, plugin_root, before_model=before_model)
+        with retrying("format"):
+            candidate, retry_usage = _generate_title_once(binary, retry_config, {
+                **context,
+                "naming_feedback": "原标题尚未符合 emoji 对象｜目标结构，或仍使用旧开发图标。请重新核对：有明确对象和目标时只迁移格式，保留准确主线；只有依据不足时 keep。不要误称旧格式已合规。",
+            }, plugin_root, before_model=before_model)
         usage = {key: usage.get(key, 0) + retry_usage.get(key, 0)
                  for key in usage.keys() | retry_usage.keys()}
     return candidate, usage

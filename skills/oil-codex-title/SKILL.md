@@ -21,7 +21,7 @@ Windows 下将示例的 `python3` 换成 `py -3`，需要已安装 Python Launch
 
 1. 执行 `python3 <入口> doctor`，检查 Python、Codex 路径和 App Server。
 2. 用户提供话题时，追加 `--thread <话题 ID>` 验证读取兼容性。
-3. 需要配置时，执行 `configure --model <模型 ID> --service-tier fast` 或 `--service-tier standard`；修正可执行文件使用 `configure --codex-bin <路径>`。模型和档位应来自用户选择或当前可用列表，不猜模型名。默认 Luna Fast，Spark 使用 standard。
+3. 只调整标题模型时，执行 `configure --naming-model <模型 ID> --naming-reasoning-effort low --naming-service-tier fast`，标准档位使用 `--naming-service-tier standard`。命令会校验当前账号可用模型与档位；切换模型时省略档位会清除旧 Fast。旧的 `--model`、`--service-tier` 修改命名和归档共享的顶层设置，只有用户要求一起调整时使用。修正可执行文件使用 `configure --codex-bin <路径>`。模型和档位来自用户选择或当前可用列表，不猜模型名；不因模型更新就跳过质量与速度评测。
 4. 安装及信任步骤见插件根目录的 `README.md`。只通过官方插件安装和 Hook 信任入口操作，不修改信任数据库，也不加绕过信任的参数。
 
 Hook 安装、启用、信任和实际成功运行是不同状态。`doctor` 成功不能证明 Hook 已自动触发。
@@ -47,8 +47,8 @@ Hook 安装、启用、信任和实际成功运行是不同状态。`doctor` 成
 - `resume`：恢复后续轮次的自动命名。
 - `lock <话题 ID>`：固定该话题当前标题。
 - `unlock <话题 ID>`：重新允许该话题自动命名。
-- `status`：显示配置位置、启用状态和已记录话题数量。
-- `usage`：汇总新版命名与归档模型的逐次用量、未知用量及保留日志中的确认跳过次数；不含管理 Agent、历史日志或未记账的评测。缓存包含在输入中，推理输出包含在输出中，不能重复相加。
+- `status`：显示配置位置、启用状态、实际生效的命名模型设置和已记录话题数量。
+- `usage`：汇总新版命名与归档模型的逐次用量、未知用量、阶段耗时及保留日志中的确认跳过次数；不含管理 Agent、历史日志或未记账的评测。缓存包含在输入中，推理输出包含在输出中，不能重复相加。
 
 第一次接触话题时，插件无法判断现有标题是否来自用户手动设置。对需永久保留的历史标题使用 `lock`。
 

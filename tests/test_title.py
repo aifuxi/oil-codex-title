@@ -436,12 +436,16 @@ class TitleTests(unittest.TestCase):
     def test_format_review_shares_model_deadline(self):
         from unittest.mock import patch
         keep = {"action": "keep", "title": "旧标题", "reason": ""}
-        with patch("codex_adapter._generate_title_once", return_value=(keep, {"input_tokens": 10})) as call, patch("codex_adapter.time.monotonic", side_effect=[0, 90]):
-            generate_title("unused", {"model_timeout_seconds": 100}, {"current_title": "旧标题"}, ROOT)
-        self.assertEqual(call.call_args.args[1]["model_timeout_seconds"], 10)
-        with patch("codex_adapter._generate_title_once", return_value=(keep, {"input_tokens": 10})) as call, patch("codex_adapter.time.monotonic", side_effect=[0, 101]):
-            generate_title("unused", {"model_timeout_seconds": 100}, {"current_title": "旧标题"}, ROOT)
-        self.assertEqual(call.call_count, 1)
+        for elapsed, expected_calls in ((90, 2), (101, 1)):
+            now = [0]
+            def first(*args, **kwargs):
+                now[0] = elapsed
+                return keep, {"input_tokens": 10}
+            with self.subTest(elapsed=elapsed), patch("codex_adapter._generate_title_once", side_effect=first) as call, patch("codex_adapter.time.monotonic", side_effect=lambda: now[0]):
+                generate_title("unused", {"model_timeout_seconds": 100}, {"current_title": "旧标题"}, ROOT)
+            self.assertEqual(call.call_count, expected_calls)
+            if expected_calls == 2:
+                self.assertEqual(call.call_args.args[1]["model_timeout_seconds"], 10)
 
     def test_global_worker_slots_limit_different_threads_and_release(self):
         with title.worker_slot(self.root, 2, 0) as first:
