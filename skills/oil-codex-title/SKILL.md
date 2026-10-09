@@ -2,7 +2,7 @@
 name: oil-codex-title
 description: 管理 oil-codex-title 插件的话题自动命名和可选闲置归档，检查后台 Hook、预览或修改话题标题、暂停恢复、保护标题或话题、配置定期归档。当用户要求管理 Codex 话题名称、预览闲置话题归档或配置本插件时使用；不用于文章标题、视频标题、文件重命名，也不在普通对话结束时由主 Agent 主动执行。
 metadata:
-  compatibility: Codex 本地插件专用；需要 Python 3.10+、已登录且支持当前话题存储的 Codex CLI。macOS 已实测；Windows 与 Linux 已通过自动化测试，桌面完整流程待实测；云端不支持后台入口。
+  compatibility: Codex 本地插件专用；需要 Python 3.10+、已登录且支持当前话题存储的 Codex CLI。macOS 为完整支持与验收平台；Linux 保留基础程序回归，桌面完整流程未实测；Windows 不在支持范围内；云端不支持后台入口。
 ---
 
 # oil-codex-title
@@ -17,7 +17,7 @@ metadata:
 
 ## 检查与配置
 
-Windows 下将示例的 `python3` 换成 `py -3`，需要已安装 Python Launcher。Windows 启动与 CLI 路径说明见插件根目录 `docs/Windows安装与验证.md`。
+以下命令以 macOS 为准，Windows 不再纳入安装指导与验收。
 
 1. 执行 `python3 <入口> doctor`，检查 Python、Codex 路径和 App Server。
 2. 用户提供话题时，追加 `--thread <话题 ID>` 验证读取兼容性。
