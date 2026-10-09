@@ -1,0 +1,39 @@
+{
+  "scenario": "持久在线官方 App Server 的单轮邮箱验证码合成对话，自然触发安装后 Stop Hook",
+  "platform": "macOS",
+  "codex_version": "0.160.0",
+  "plugin_version": "0.1.0+codex.20261009",
+  "model": "gpt-5.6-luna",
+  "reasoning_effort": "low",
+  "service_tier": "priority",
+  "hook_status": "renamed",
+  "title": "🧩 邮箱验证码｜修复过期后仍可使用",
+  "title_readback_matches": true,
+  "turns": 1,
+  "user_messages": 1,
+  "performance": {
+    "elapsed_seconds": 10.025,
+    "timings": {
+      "thread_lock_wait": 0.001,
+      "connection": 0.03,
+      "state_check": 1.725,
+      "host_read": 0.003,
+      "worker_wait": 0.0,
+      "model": 8.244,
+      "title_write": 0.001,
+      "title_verify": 0.001
+    },
+    "model_calls": 1,
+    "retry_calls": 0
+  },
+  "usage": {
+    "input_tokens": 5832,
+    "cached_input_tokens": 4864,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 91,
+    "reasoning_output_tokens": 45
+  },
+  "desktop_display": "not_verified",
+  "desktop_limitation": "计算机工具拒绝访问 Codex 应用，未取得界面文字或截图。",
+  "notice": "单次合成验收，模型调用消耗账号额度；普通回归不调用模型。没有手工执行 hook 命令，不恢复真实用户话题；不证明桌面显示或整体延迟改善。"
+}
