@@ -87,15 +87,31 @@ def worker_env() -> dict[str, str]:
 
 class CodexBackend:
     """独立 stdio 连接；不会 resume 原会话或向它发送 turn/start。"""
-    def __init__(self, binary: str, timeout: float = 15, *, disable_hooks: bool = True):
+    def __init__(self, binary: str, timeout: float = 15, *, disable_hooks: bool = True,
+                 lazy: bool = False):
         self.binary = binary
         self.timeout = timeout
         self.proc = None
         self.messages = queue.Queue()
         self.counter = 0
         self.disable_hooks = disable_hooks
+        self.lazy = lazy
+        self.thread_cwds = {}
 
     def __enter__(self):
+        if not self.lazy:
+            self.start()
+        return self
+
+    def start(self):
+        """Hook 在取得话题锁后连接；无宿主访问的分支不启动子进程。"""
+        if self.proc is not None:
+            return
+        with measure("connection"):
+            self._start()
+
+    def _start(self):
+        self.messages = queue.Queue()
         self.proc = subprocess.Popen(
             [self.binary, "app-server"] + (["--disable", "hooks"] if self.disable_hooks else []),
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
@@ -111,7 +127,6 @@ class CodexBackend:
         except Exception:
             self.__exit__(None, None, None)
             raise
-        return self
 
     def _reader(self):
         try:
@@ -127,6 +142,8 @@ class CodexBackend:
         self.proc.stdin.flush()
 
     def call(self, method, params):
+        if self.proc is None:
+            self.start()
         self.counter += 1
         request_id = self.counter
         self._send({"id": request_id, "method": method, "params": params})
@@ -148,7 +165,10 @@ class CodexBackend:
             return message["result"]
 
     def read(self, thread_id):
-        return self.call("thread/read", {"threadId": thread_id, "includeTurns": True})["thread"]
+        thread = self.call("thread/read", {"threadId": thread_id, "includeTurns": True})["thread"]
+        # 仅在内存复用宿主事实，不把完整目录加入模型摘录或本地状态。
+        self.thread_cwds[thread_id] = thread.get("cwd")
+        return thread
 
     def rename(self, thread_id, title):
         return self.call("thread/name/set", {"threadId": thread_id, "name": title})
@@ -178,6 +198,7 @@ class CodexBackend:
             params["cursor"] = cursor
 
     def is_archived(self, thread_id, cwd=None):
+        cwd = cwd or self.thread_cwds.get(thread_id)
         return any(t["id"] == thread_id for t in self.list_threads(archived=True, cwd=cwd))
 
     def __exit__(self, *_):

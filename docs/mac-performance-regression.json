@@ -1,0 +1,18 @@
+{
+  "scenario": "2000 轮合成长对话，仅比较本地 snapshot 提取；两种算法输出完全相同",
+  "repeats": 25,
+  "python": "3.13.16",
+  "platform": "macOS",
+  "snapshot_equal": true,
+  "timings": {
+    "baseline": {
+      "p50_ms": 16.391,
+      "max_ms": 16.77
+    },
+    "optimized": {
+      "p50_ms": 0.079,
+      "max_ms": 0.09
+    }
+  },
+  "notice": "未调用模型，未触发 Hook；不能推断整条命名链路或桌面可见延迟。"
+}

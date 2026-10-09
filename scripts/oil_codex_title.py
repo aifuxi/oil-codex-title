@@ -167,8 +167,8 @@ def limited_title(binary, root, config, context, *, before_model=None):
                               before_model=before_model)
 
 
-def ensure_title_active(backend, thread_id, root):
-    if timed_call("state_check", backend.is_archived, thread_id):
+def ensure_title_active(backend, thread_id, root, cwd=None):
+    if timed_call("state_check", backend.is_archived, thread_id, cwd):
         raise ModelSkipped("archived")
     started = time.perf_counter()
     try:
@@ -264,25 +264,42 @@ def item_text(item):
     return clean_text(item.get("text", ""))
 
 
+def turn_messages(turn):
+    """提取完整用户消息与最终回答；工具内容不进入命名依据。"""
+    messages = []
+    for item in turn.get("items", []):
+        kind = item.get("type")
+        if kind != "userMessage" and not (
+            kind == "agentMessage" and item.get("phase") in (None, "final_answer")
+        ):
+            continue
+        text = item_text(item)
+        if text:
+            messages.append({"role": "user" if kind == "userMessage" else "assistant", "text": text})
+    return messages
+
+
 def snapshot(thread, config):
-    """只给命名模型用户与最终回答；用最新轮次 ID 检测生成期间的新活动。"""
+    """只解析首个目标和近期有效轮次；摘录及内容指纹保持原语义。"""
     turns = thread.get("turns", [])
-    effective = []
-    for turn in turns:
-        messages = []
-        for item in turn.get("items", []):
-            kind = item.get("type")
-            if kind != "userMessage" and not (
-                kind == "agentMessage" and item.get("phase") in (None, "final_answer")
-            ):
-                continue
-            text = item_text(item)
-            if text:
-                messages.append({"role": "user" if kind == "userMessage" else "assistant", "text": text})
+    selected = []
+    for turn in reversed(turns):
+        messages = turn_messages(turn)
         if any(m["role"] == "user" for m in messages):
-            effective.append({"id": turn["id"], "messages": messages})
+            selected.append({"id": turn["id"], "messages": messages})
+            if len(selected) == config["recent_turns"]:
+                break
+    selected.reverse()
+    original = ""
+    for turn in turns:
+        for item in turn.get("items", []):
+            if item.get("type") == "userMessage":
+                original = item_text(item)[:800]
+                if original:
+                    break
+        if original:
+            break
     title = thread.get("name") or ""
-    selected = effective[-config["recent_turns"]:]
     budget = config["max_context_chars"]
     # 为每轮的用户目标保留空间；助手长回答不能挤掉其他轮。
     per_message = max(200, (budget - 2000) // max(1, sum(len(t["messages"]) for t in selected)))
@@ -290,19 +307,16 @@ def snapshot(thread, config):
         {"role": m["role"], "text": m["text"][:min(per_message, 1200 if m["role"] == "user" else 500)]}
         for m in t["messages"]
     ]} for t in selected]
-    original = ""
-    if effective:
-        original = next(m["text"] for m in effective[0]["messages"] if m["role"] == "user")[:800]
     latest_id = turns[-1]["id"] if turns else None
     context = {"current_title": title, "project_hint": project_hint(thread),
                "original_goal": original, "recent_turns": recent}
     signature = json.dumps({"policy_version": POLICY_VERSION, "project_hint": context["project_hint"],
-                           "latest_id": latest_id, "effective": effective[-config["recent_turns"]:]},
+                           "latest_id": latest_id, "effective": selected},
                            ensure_ascii=False, sort_keys=True)
     fingerprint = hashlib.sha256(signature.encode()).hexdigest()
     scope_key = hashlib.sha256(str(thread["cwd"]).encode()).hexdigest() if thread.get("cwd") else ""
     return {"title": title, "latest_id": latest_id, "fingerprint": fingerprint,
-            "context": context, "has_messages": bool(effective), "scope_key": scope_key}
+            "context": context, "has_messages": bool(selected), "scope_key": scope_key}
 
 
 def validate_candidate(candidate, current_title):
@@ -374,15 +388,17 @@ def confirmation_only(thread, state, config):
 
 
 def process_thread(backend, generator, thread_id, root, config, *, apply=False, event_turn=None,
-                   started_at=None, initial_timings=None):
+                   started_at=None, initial_timings=None, preflight_in_generator=False):
     with usage_scope(root, "naming", thread_id, started_at=started_at, initial_timings=initial_timings) as accounting:
-        result = _process_thread(backend, generator, thread_id, root, config, apply=apply, event_turn=event_turn)
+        result = _process_thread(backend, generator, thread_id, root, config, apply=apply,
+                                 event_turn=event_turn, preflight_in_generator=preflight_in_generator)
         accounting.outcome = result["status"]
         result["performance"] = accounting.metrics()
         return result
 
 
-def _process_thread(backend, generator, thread_id, root, config, *, apply=False, event_turn=None):
+def _process_thread(backend, generator, thread_id, root, config, *, apply=False, event_turn=None,
+                    preflight_in_generator=False):
     thread_id = valid_id(thread_id)
     if not config["enabled"]:
         return {"status": "disabled"}
@@ -392,6 +408,14 @@ def _process_thread(backend, generator, thread_id, root, config, *, apply=False,
             return {"status": "busy"}
         path = state_path(root, thread_id)
         state = read_json(path)
+        # 锁等待后再检查暂停；只对 Hook 提前退出，手工预览仍返回宿主当前标题。
+        if not load_config(root)["enabled"]:
+            return {"status": "disabled"}
+        established = bool(state.get("last_fingerprint") or state.get("last_generated_title"))
+        if event_turn and state.get("locked") and established and not state.get("pending_title"):
+            return {"status": "locked"}
+        if getattr(backend, "lazy", False):
+            backend.start()
         if timed_call("state_check", backend.is_archived, thread_id):
             return {"status": "archived"}
         if event_turn:
@@ -429,7 +453,10 @@ def _process_thread(backend, generator, thread_id, root, config, *, apply=False,
             return {"status": "unchanged", "title": before["title"]}
         skipped = confirmation_only(thread, state, config)
         try:
-            ensure_title_active(backend, thread_id, root)
+            # 正式生成器在配额获得后、每次真实进程启动前复核；避免紧邻重复读取。
+            # 零模型路径与没有这一保证的注入生成器仍在业务层检查。
+            if skipped or not preflight_in_generator:
+                ensure_title_active(backend, thread_id, root, thread.get("cwd"))
             if skipped:
                 candidate, usage = {"action": "keep", "title": before["title"], "reason": "新增内容仅为确认，保留稳定标题"}, {}
             else:
@@ -437,10 +464,12 @@ def _process_thread(backend, generator, thread_id, root, config, *, apply=False,
         except ModelSkipped as exc:
             return {"status": exc.status}
         candidate = validate_candidate(candidate, before["title"])
-        conflicts = conflicting_titles(root, thread_id, candidate["title"], before["scope_key"])
-        if candidate["action"] == "rename" and conflicts:
+        conflicts = (conflicting_titles(root, thread_id, candidate["title"], before["scope_key"])
+                     if candidate["action"] == "rename" and candidate["title"] != before["title"] else [])
+        if conflicts:
             try:
-                ensure_title_active(backend, thread_id, root)
+                if not preflight_in_generator:
+                    ensure_title_active(backend, thread_id, root, thread.get("cwd"))
                 with retrying("conflict"):
                     candidate, retry_usage = generator({**before["context"], "conflicting_titles": conflicts,
                         "naming_feedback": "候选与已记录任务重名。用对话里真实的项目、模块或内容主题区分；无法区分就保留原名，不编造编号。"})
@@ -449,7 +478,8 @@ def _process_thread(backend, generator, thread_id, root, config, *, apply=False,
             candidate = validate_candidate(candidate, before["title"])
             usage = {key: usage.get(key, 0) + retry_usage.get(key, 0)
                      for key in usage.keys() | retry_usage.keys()}
-            if candidate["action"] == "rename" and conflicting_titles(root, thread_id, candidate["title"], before["scope_key"]):
+            if (candidate["action"] == "rename" and candidate["title"] != before["title"]
+                    and conflicting_titles(root, thread_id, candidate["title"], before["scope_key"])):
                 return {"status": "ambiguous_title", "title": before["title"], "usage": usage}
         result = {"status": "preview", **candidate, "usage": usage}
         if skipped:
@@ -463,7 +493,7 @@ def _process_thread(backend, generator, thread_id, root, config, *, apply=False,
         latest_state = read_json(path)
         if latest_state.get("locked"):
             return {"status": "locked"}
-        if timed_call("state_check", backend.is_archived, thread_id):
+        if timed_call("state_check", backend.is_archived, thread_id, thread.get("cwd")):
             return {"status": "archived"}
         after = snapshot(timed_call("host_read", backend.read, thread_id), config)
         if after["title"] != before["title"] or after["fingerprint"] != before["fingerprint"]:
@@ -615,7 +645,7 @@ def main():
         else:
             thread_id = thread_id or valid_id(args.thread_id)
             connection_started = time.perf_counter()
-            with CodexBackend(binary) as backend:
+            with CodexBackend(binary, lazy=is_hook) as backend:
                 connection_seconds = time.perf_counter() - connection_started
                 if args.command in ("lock", "unlock"):
                     with thread_lock(root, thread_id) as acquired:
@@ -635,7 +665,8 @@ def main():
                             before_model=lambda: ensure_title_active(backend, thread_id, root)),
                         thread_id, root, config, apply=is_hook or args.apply,
                         event_turn=turn_id if is_hook else None,
-                        started_at=started, initial_timings={"connection": connection_seconds},
+                        started_at=started, initial_timings={} if is_hook else {"connection": connection_seconds},
+                        preflight_in_generator=True,
                     )
                     if is_hook and result["status"] not in ("renamed", "kept"):
                         audit(root, thread_id, result)
