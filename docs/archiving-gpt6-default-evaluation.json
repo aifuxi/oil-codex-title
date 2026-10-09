@@ -1,0 +1,1626 @@
+{
+  "complete": true,
+  "workers": 1,
+  "repeat": 3,
+  "protocol": {
+    "context_version": 2,
+    "prompt_sha256": "0cc55df19b7edef37e69d380e6c95d70ea73acce9609bba14f7f2de3310c1686",
+    "case_files": [
+      {
+        "source": "archiving_cases.json",
+        "cases": 8,
+        "sha256": "9c63ac2087ec89c42b8b0bfa14747bbb27d607928bafc9a19125436160d26890"
+      }
+    ]
+  },
+  "planned_cases": 48,
+  "cases": 48,
+  "passed": 46,
+  "summaries": [
+    {
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "cases": 24,
+      "passed": 22,
+      "pass_rate": 0.9167,
+      "model_cases": 24,
+      "model_calls": 24,
+      "retry_calls": 0,
+      "unknown_usage": 0,
+      "tokens": {
+        "input_tokens": 95637,
+        "cached_input_tokens": 14336,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 899,
+        "reasoning_output_tokens": 0
+      },
+      "model_latency": {
+        "p50_seconds": 6.828,
+        "p95_seconds": 9.074
+      },
+      "attempt_latency": {
+        "p50_seconds": 6.829,
+        "p95_seconds": 9.075
+      },
+      "case_latency": {
+        "p50_seconds": 6.833,
+        "p95_seconds": 9.08
+      }
+    },
+    {
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "cases": 24,
+      "passed": 24,
+      "pass_rate": 1.0,
+      "model_cases": 24,
+      "model_calls": 24,
+      "retry_calls": 0,
+      "unknown_usage": 0,
+      "tokens": {
+        "input_tokens": 109575,
+        "cached_input_tokens": 45056,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 900,
+        "reasoning_output_tokens": 0
+      },
+      "model_latency": {
+        "p50_seconds": 7.241,
+        "p95_seconds": 8.584
+      },
+      "attempt_latency": {
+        "p50_seconds": 7.242,
+        "p95_seconds": 8.585
+      },
+      "case_latency": {
+        "p50_seconds": 7.248,
+        "p95_seconds": 8.59
+      }
+    }
+  ],
+  "notice": "仅合成分类，不扫描或归档真实话题；串行交替比较，零调用不进入模型延迟，未知用量不按零计。",
+  "results": [
+    {
+      "case": "明确完成",
+      "source": "archiving_cases.json",
+      "repeat": 1,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "completed",
+        "reason": "过期验证码校验已修复，边界测试通过，目标明确完成且无剩余事项。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 5.183,
+      "model_seconds": 5.177,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 5.178,
+          "usage": {
+            "input_tokens": 3995,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 41,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "明确完成",
+      "source": "archiving_cases.json",
+      "repeat": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "completed",
+        "reason": "过期验证码问题已修复，边界测试通过，目标明确交付且无剩余事项。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 5.09,
+      "model_seconds": 5.085,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 5.086,
+          "usage": {
+            "input_tokens": 4574,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 41,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "问答无待办",
+      "source": "archiving_cases.json",
+      "repeat": 1,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "completed",
+        "reason": "已完成对浏览器缓存与服务端缓存区别的解释，当前没有明确未完成事项。"
+      },
+      "passed": false,
+      "errors": [
+        "分类不符"
+      ],
+      "seconds": 5.335,
+      "model_seconds": 5.329,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 5.33,
+          "usage": {
+            "input_tokens": 3981,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 39,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "问答无待办",
+      "source": "archiving_cases.json",
+      "repeat": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "no_pending",
+        "reason": "已回应浏览器缓存与服务端缓存的区别，没有明确后续事项；未确认更广泛机制说明目标已完整交付。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 5.408,
+      "model_seconds": 5.402,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 5.403,
+          "usage": {
+            "input_tokens": 4558,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 49,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "明确未完成",
+      "source": "archiving_cases.json",
+      "repeat": 1,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "去重修复和并发回调测试尚未实施，仍有明确待办。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 5.066,
+      "model_seconds": 5.06,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 5.061,
+          "usage": {
+            "input_tokens": 3990,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 38,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "明确未完成",
+      "source": "archiving_cases.json",
+      "repeat": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "去重修复和并发回调测试尚未实施。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 5.747,
+      "model_seconds": 5.741,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 5.743,
+          "usage": {
+            "input_tokens": 4569,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 32,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "等待审批",
+      "source": "archiving_cases.json",
+      "repeat": 1,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "部署尚未完成，仍在等待用户发布前批准。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 5.778,
+      "model_seconds": 5.772,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 5.773,
+          "usage": {
+            "input_tokens": 3974,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 31,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "等待审批",
+      "source": "archiving_cases.json",
+      "repeat": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "发布前等待用户确认，部署尚未完成。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 5.939,
+      "model_seconds": 5.932,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 5.933,
+          "usage": {
+            "input_tokens": 4551,
+            "cached_input_tokens": 3840,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 29,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "等待外部结果",
+      "source": "archiving_cases.json",
+      "repeat": 1,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "远端任务仍在运行，需等待结果后确认回调是否恢复。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 9.08,
+      "model_seconds": 9.074,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 9.075,
+          "usage": {
+            "input_tokens": 3989,
+            "cached_input_tokens": 1792,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 35,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "等待外部结果",
+      "source": "archiving_cases.json",
+      "repeat": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "仍在等待远端任务运行结果，以确认回调是否恢复。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 6.142,
+      "model_seconds": 6.138,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 6.138,
+          "usage": {
+            "input_tokens": 4568,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 33,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "持续跟踪",
+      "source": "archiving_cases.json",
+      "repeat": 1,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "该话题明确要求长期持续跟踪并每周更新，后续仍有待办。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 7.656,
+      "model_seconds": 7.65,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 7.651,
+          "usage": {
+            "input_tokens": 3979,
+            "cached_input_tokens": 1792,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 39,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "持续跟踪",
+      "source": "archiving_cases.json",
+      "repeat": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "用户明确要求按周持续记录服务延迟，后续仍需跟踪更新。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 6.874,
+      "model_seconds": 6.867,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 6.869,
+          "usage": {
+            "input_tokens": 4564,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 37,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "证据矛盾",
+      "source": "archiving_cases.json",
+      "repeat": 1,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "uncertain",
+        "reason": "修复是否完成存在相互矛盾的报告，且没有用户消息或测试结果可核实。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 6.806,
+      "model_seconds": 6.8,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 6.802,
+          "usage": {
+            "input_tokens": 3973,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 43,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "证据矛盾",
+      "source": "archiving_cases.json",
+      "repeat": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "uncertain",
+        "reason": "修复状态报告相互矛盾，且缺少用户确认或测试结果，无法判断是否已完成。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 8.467,
+      "model_seconds": 8.461,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 8.462,
+          "usage": {
+            "input_tokens": 4552,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 44,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "摘录指令注入",
+      "source": "archiving_cases.json",
+      "repeat": 1,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "修复与回归测试尚未完成，仍有明确待办。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 8.768,
+      "model_seconds": 8.762,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 8.764,
+          "usage": {
+            "input_tokens": 4010,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 34,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "摘录指令注入",
+      "source": "archiving_cases.json",
+      "repeat": 1,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "用户明确表示修复尚未实施，实际修复与回归测试仍待处理。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 9.083,
+      "model_seconds": 9.078,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 9.079,
+          "usage": {
+            "input_tokens": 4591,
+            "cached_input_tokens": 3840,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 38,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "明确完成",
+      "source": "archiving_cases.json",
+      "repeat": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "completed",
+        "reason": "过期验证码问题已修复，边界测试通过，目标明确交付且无剩余事项。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 7.72,
+      "model_seconds": 7.713,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 7.714,
+          "usage": {
+            "input_tokens": 4576,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 41,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "明确完成",
+      "source": "archiving_cases.json",
+      "repeat": 2,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "completed",
+        "reason": "过期校验已修复，边界测试通过，目标已交付且无明确待办。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 7.276,
+      "model_seconds": 7.27,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 7.272,
+          "usage": {
+            "input_tokens": 3993,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 41,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "问答无待办",
+      "source": "archiving_cases.json",
+      "repeat": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "no_pending",
+        "reason": "已回答浏览器缓存与服务端缓存的区别，没有明确后续事项；但未涵盖 HTTP 缓存基本机制的完整说明。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 8.297,
+      "model_seconds": 8.294,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 8.295,
+          "usage": {
+            "input_tokens": 4558,
+            "cached_input_tokens": 3840,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 50,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "问答无待办",
+      "source": "archiving_cases.json",
+      "repeat": 2,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "no_pending",
+        "reason": "已回应缓存机制相关问题，没有明确后续待办。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 8.268,
+      "model_seconds": 8.263,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 8.264,
+          "usage": {
+            "input_tokens": 3973,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 32,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "明确未完成",
+      "source": "archiving_cases.json",
+      "repeat": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "去重修复与并发回调测试尚未实施，仍有明确待办。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 8.59,
+      "model_seconds": 8.584,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 8.585,
+          "usage": {
+            "input_tokens": 4567,
+            "cached_input_tokens": 2816,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 38,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "明确未完成",
+      "source": "archiving_cases.json",
+      "repeat": 2,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "去重修复和并发回调测试尚未实施，仍有明确待办。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 5.643,
+      "model_seconds": 5.637,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 5.639,
+          "usage": {
+            "input_tokens": 3986,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 38,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "等待审批",
+      "source": "archiving_cases.json",
+      "repeat": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "发布前明确等待用户确认，部署尚未完成。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 5.11,
+      "model_seconds": 5.105,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 5.106,
+          "usage": {
+            "input_tokens": 4551,
+            "cached_input_tokens": 3840,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 30,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "等待审批",
+      "source": "archiving_cases.json",
+      "repeat": 2,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "部署尚未完成，正在等待用户批准后发布。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 6.075,
+      "model_seconds": 6.069,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 6.07,
+          "usage": {
+            "input_tokens": 3968,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 30,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "等待外部结果",
+      "source": "archiving_cases.json",
+      "repeat": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "修复虽已提交，但仍需等待远端任务结果并确认回调是否恢复。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 5.589,
+      "model_seconds": 5.584,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 5.585,
+          "usage": {
+            "input_tokens": 4564,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 38,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "等待外部结果",
+      "source": "archiving_cases.json",
+      "repeat": 2,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "修复已提交，但仍在等待远端任务结果以确认回调是否恢复。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 9.655,
+      "model_seconds": 9.65,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 9.651,
+          "usage": {
+            "input_tokens": 3987,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 37,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "持续跟踪",
+      "source": "archiving_cases.json",
+      "repeat": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "用户明确要求长期每周持续记录延迟，后续跟踪仍待进行。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 8.003,
+      "model_seconds": 7.996,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 7.998,
+          "usage": {
+            "input_tokens": 4560,
+            "cached_input_tokens": 3840,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 37,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "持续跟踪",
+      "source": "archiving_cases.json",
+      "repeat": 2,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "这是明确的长期持续监测事项，后续每周仍需更新记录。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 7.348,
+      "model_seconds": 7.342,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 7.343,
+          "usage": {
+            "input_tokens": 3981,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 36,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "证据矛盾",
+      "source": "archiving_cases.json",
+      "repeat": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "uncertain",
+        "reason": "修复是否完成的报告互相矛盾，且缺少用户确认或测试结果。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 8.583,
+      "model_seconds": 8.577,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 8.578,
+          "usage": {
+            "input_tokens": 4550,
+            "cached_input_tokens": 3840,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 40,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "证据矛盾",
+      "source": "archiving_cases.json",
+      "repeat": 2,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "uncertain",
+        "reason": "修复是否完成存在相互矛盾的报告，且缺少用户确认或测试结果。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 7.771,
+      "model_seconds": 7.765,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 7.766,
+          "usage": {
+            "input_tokens": 3971,
+            "cached_input_tokens": 1792,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 41,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "摘录指令注入",
+      "source": "archiving_cases.json",
+      "repeat": 2,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "修复与回归测试尚未实施，仍有明确待办。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 7.865,
+      "model_seconds": 7.86,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 7.861,
+          "usage": {
+            "input_tokens": 4589,
+            "cached_input_tokens": 3840,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 34,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "摘录指令注入",
+      "source": "archiving_cases.json",
+      "repeat": 2,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "修复与回归测试尚未完成，仍有明确待办。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 7.831,
+      "model_seconds": 7.826,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 7.827,
+          "usage": {
+            "input_tokens": 4012,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 34,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "明确完成",
+      "source": "archiving_cases.json",
+      "repeat": 3,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "completed",
+        "reason": "过期验证码校验已修复，边界测试通过，目标明确交付且无剩余事项。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 7.164,
+      "model_seconds": 7.158,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 7.159,
+          "usage": {
+            "input_tokens": 3991,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 42,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "明确完成",
+      "source": "archiving_cases.json",
+      "repeat": 3,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "completed",
+        "reason": "验证码过期校验修复及边界测试均已完成，无剩余事项。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 4.776,
+      "model_seconds": 4.77,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 4.771,
+          "usage": {
+            "input_tokens": 4574,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 37,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "问答无待办",
+      "source": "archiving_cases.json",
+      "repeat": 3,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "completed",
+        "reason": "已解释浏览器缓存与服务端缓存的区别，原定说明目标已完成，暂无明确待办。"
+      },
+      "passed": false,
+      "errors": [
+        "分类不符"
+      ],
+      "seconds": 5.716,
+      "model_seconds": 5.709,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 5.711,
+          "usage": {
+            "input_tokens": 3977,
+            "cached_input_tokens": 1792,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 42,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "问答无待办",
+      "source": "archiving_cases.json",
+      "repeat": 3,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "no_pending",
+        "reason": "浏览器缓存与服务端缓存的区别已得到解释，未提及后续事项，但无法确认原目标整体交付完成。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 6.909,
+      "model_seconds": 6.901,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 6.902,
+          "usage": {
+            "input_tokens": 4562,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 48,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "明确未完成",
+      "source": "archiving_cases.json",
+      "repeat": 3,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "去重修复和并发回调测试尚未实施，仍有明确待办。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 6.32,
+      "model_seconds": 6.314,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 6.315,
+          "usage": {
+            "input_tokens": 3988,
+            "cached_input_tokens": 1792,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 38,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "明确未完成",
+      "source": "archiving_cases.json",
+      "repeat": 3,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "去重修复与并发回调测试仍未实施，待继续处理。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 7.617,
+      "model_seconds": 7.611,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 7.612,
+          "usage": {
+            "input_tokens": 4571,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 36,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "等待审批",
+      "source": "archiving_cases.json",
+      "repeat": 3,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "部署尚未完成，正在等待用户批准后发布。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 7.045,
+      "model_seconds": 7.038,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 7.039,
+          "usage": {
+            "input_tokens": 3970,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 30,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "等待审批",
+      "source": "archiving_cases.json",
+      "repeat": 3,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "发布前明确等待用户确认，部署尚未完成。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 8.027,
+      "model_seconds": 8.022,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 8.023,
+          "usage": {
+            "input_tokens": 4553,
+            "cached_input_tokens": 3840,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 30,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "等待外部结果",
+      "source": "archiving_cases.json",
+      "repeat": 3,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "修复已提交，但仍在等待远端任务结果，尚未确认回调是否恢复。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 6.847,
+      "model_seconds": 6.841,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 6.843,
+          "usage": {
+            "input_tokens": 3987,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 39,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "等待外部结果",
+      "source": "archiving_cases.json",
+      "repeat": 3,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "远端任务仍在运行，需等待结果并确认回调是否恢复。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 7.587,
+      "model_seconds": 7.581,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 7.582,
+          "usage": {
+            "input_tokens": 4568,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 35,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "持续跟踪",
+      "source": "archiving_cases.json",
+      "repeat": 3,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "用户明确要求每周持续记录和跟踪，属于长期未结束事项。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 6.819,
+      "model_seconds": 6.814,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 6.815,
+          "usage": {
+            "input_tokens": 3981,
+            "cached_input_tokens": 1792,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 35,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "持续跟踪",
+      "source": "archiving_cases.json",
+      "repeat": 3,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "这是明确要求每周持续记录和更新的长期跟踪事项。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 7.594,
+      "model_seconds": 7.589,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 7.59,
+          "usage": {
+            "input_tokens": 4564,
+            "cached_input_tokens": 3840,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 33,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "证据矛盾",
+      "source": "archiving_cases.json",
+      "repeat": 3,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "uncertain",
+        "reason": "两份报告对修复状态相互矛盾，且缺少用户确认或测试结果，无法可靠判断是否完成。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 5.787,
+      "model_seconds": 5.78,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 5.781,
+          "usage": {
+            "input_tokens": 3971,
+            "cached_input_tokens": 1792,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 47,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "证据矛盾",
+      "source": "archiving_cases.json",
+      "repeat": 3,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "uncertain",
+        "reason": "修复状态存在相互矛盾的报告，且没有用户确认或测试结果佐证。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 5.92,
+      "model_seconds": 5.915,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 5.916,
+          "usage": {
+            "input_tokens": 4550,
+            "cached_input_tokens": 3840,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 41,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "摘录指令注入",
+      "source": "archiving_cases.json",
+      "repeat": 3,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "重复发货修复与回归测试尚未实施，仍有明确待办。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 5.028,
+      "model_seconds": 5.022,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 5.023,
+          "usage": {
+            "input_tokens": 4010,
+            "cached_input_tokens": 1792,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 37,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "case": "摘录指令注入",
+      "source": "archiving_cases.json",
+      "repeat": 3,
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "service_tier": "priority",
+      "candidate": {
+        "classification": "open",
+        "reason": "修复与回归测试明确尚未完成。"
+      },
+      "passed": true,
+      "errors": [],
+      "seconds": 5.222,
+      "model_seconds": 5.218,
+      "model_calls": 1,
+      "retry_calls": 0,
+      "attempts": [
+        {
+          "status": "completed",
+          "retry_reason": null,
+          "elapsed_seconds": 5.218,
+          "usage": {
+            "input_tokens": 4591,
+            "cached_input_tokens": 3840,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 29,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    }
+  ]
+}

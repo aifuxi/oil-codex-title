@@ -1,5 +1,7 @@
 """测试跨进程命名中的写入边界、保护规则和 Hook 输出契约。"""
 import copy
+import contextlib
+import io
 import json
 import os
 from pathlib import Path
@@ -9,6 +11,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -491,22 +494,27 @@ class TitleTests(unittest.TestCase):
 
     def test_model_switch_does_not_inherit_unsupported_fast_tier(self):
         title.atomic_json(self.root / "config.json", {"model": "gpt-5.6-luna", "service_tier": "priority", "future": 1})
-        env = os.environ | {"OIL_CODEX_TITLE_DATA": str(self.root)}
-        proc = subprocess.run([sys.executable, str(ROOT / "scripts/oil_codex_title.py"),
-                               "configure", "--model", "gpt-5.3-codex-spark"],
-                              capture_output=True, text=True, env=env)
-        self.assertEqual(proc.returncode, 0)
-        config = json.loads(proc.stdout)
+        output = io.StringIO()
+        with patch.dict(os.environ, {"OIL_CODEX_TITLE_DATA": str(self.root)}), \
+             patch.object(sys, 'argv', ['title', 'configure', '--model', 'synthetic-standard-model']), \
+             patch.object(title, 'find_codex', return_value='fixture-codex'), \
+             patch.object(title, 'CodexBackend'), patch.object(title, 'validate_model_config') as validate, \
+             contextlib.redirect_stdout(output):
+            self.assertEqual(title.main(), 0)
+        config = json.loads(output.getvalue())
+        validate.assert_called_once()
         self.assertIsNone(config["service_tier"])
         self.assertEqual(config["future"], 1)
 
     def test_fast_option_maps_to_priority_service(self):
-        env = os.environ | {"OIL_CODEX_TITLE_DATA": str(self.root)}
-        proc = subprocess.run([sys.executable, str(ROOT / "scripts/oil_codex_title.py"),
-                               "configure", "--model", "gpt-5.6-luna", "--service-tier", "fast"],
-                              capture_output=True, text=True, env=env)
-        self.assertEqual(proc.returncode, 0)
-        self.assertEqual(json.loads(proc.stdout)["service_tier"], "priority")
+        output = io.StringIO()
+        with patch.dict(os.environ, {"OIL_CODEX_TITLE_DATA": str(self.root)}), \
+             patch.object(sys, 'argv', ['title', 'configure', '--model', 'gpt-6-luna', '--service-tier', 'fast']), \
+             patch.object(title, 'find_codex', return_value='fixture-codex'), \
+             patch.object(title, 'CodexBackend'), patch.object(title, 'validate_model_config'), \
+             contextlib.redirect_stdout(output):
+            self.assertEqual(title.main(), 0)
+        self.assertEqual(json.loads(output.getvalue())["service_tier"], "priority")
 
 
 if __name__ == "__main__":

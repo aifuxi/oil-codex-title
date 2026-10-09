@@ -21,7 +21,7 @@ metadata:
 
 1. 执行 `python3 <入口> doctor`，检查 Python、Codex 路径和 App Server。
 2. 用户提供话题时，追加 `--thread <话题 ID>` 验证读取兼容性。
-3. 只调整标题模型时，执行 `configure --naming-model <模型 ID> --naming-reasoning-effort low --naming-service-tier fast`，标准档位使用 `--naming-service-tier standard`。命令会校验当前账号可用模型与档位；切换模型时省略档位会清除旧 Fast。旧的 `--model`、`--service-tier` 修改命名和归档共享的顶层设置，只有用户要求一起调整时使用。修正可执行文件使用 `configure --codex-bin <路径>`。模型和档位来自用户选择或当前可用列表，不猜模型名；不因模型更新就跳过质量与速度评测。
+3. 默认命名与归档共享 `gpt-6-luna + low + Fast`。只调整标题模型时，执行 `configure --naming-model <模型 ID> --naming-reasoning-effort low --naming-service-tier fast`，标准档位使用 `--naming-service-tier standard`。命令会校验共享配置与有效命名配置的账号模型能力，失败不写配置；切换模型时省略档位会清除旧 Fast。`--model`、`--service-tier` 修改命名和归档共享的顶层设置，只有用户要求一起调整时使用，已有显式命名覆盖会保留。修正可执行文件使用 `configure --codex-bin <路径>`。模型和档位来自用户选择或当前可用列表，不猜模型名；不因模型更新就跳过质量与速度评测。
 4. 安装及信任步骤见插件根目录的 `README.md`。只通过官方插件安装和 Hook 信任入口操作，不修改信任数据库，也不加绕过信任的参数。
 
 Hook 安装、启用、信任和实际成功运行是不同状态。`doctor` 成功不能证明 Hook 已自动触发。

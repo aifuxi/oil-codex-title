@@ -1,0 +1,45 @@
+{
+  "scenario": "持久在线官方 App Server 单轮合成验证码修复目标，自然触发 Stop Hook",
+  "platform": "macOS",
+  "model": "gpt-6-luna",
+  "reasoning_effort": "low",
+  "service_tier": "priority",
+  "hook_status": "renamed",
+  "title": "🧩 邮箱验证码｜过期后禁止使用",
+  "title_readback_matches": true,
+  "turns": 1,
+  "user_messages": 1,
+  "performance": {
+    "elapsed_seconds": 7.331,
+    "timings": {
+      "thread_lock_wait": 0.0,
+      "connection": 0.03,
+      "state_check": 1.767,
+      "host_read": 0.003,
+      "worker_wait": 0.0,
+      "model": 5.518,
+      "title_write": 0.001,
+      "title_verify": 0.001
+    },
+    "model_calls": 1,
+    "retry_calls": 0
+  },
+  "usage": {
+    "input_tokens": 6430,
+    "cached_input_tokens": 5888,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 45,
+    "reasoning_output_tokens": 0
+  },
+  "actual_models": [
+    "gpt-6-luna"
+  ],
+  "desktop_display": "not_verified",
+  "desktop_limitation": "计算机工具拒绝访问 Codex 应用，未取得界面文字或截图。",
+  "notice": "单次独立合成验收；没有手工构造Stop事件，不恢复真实用户话题；不证明桌面可见延迟。",
+  "codex_version": "0.160.0",
+  "plugin_version": "0.1.0+codex.20261009",
+  "isolated_data_dir": true,
+  "copied_runtime_config": true,
+  "synthetic_thread_archived": true
+}

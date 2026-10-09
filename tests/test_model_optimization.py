@@ -49,13 +49,13 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual(config['reasoning_effort'], 'low')
 
     def test_naming_model_without_tier_does_not_inherit_fast(self):
-        title.atomic_json(self.path, {'naming': {'model': 'gpt-6-luna'}})
+        title.atomic_json(self.path, {'model': 'gpt-5.6-luna', 'naming': {'model': 'gpt-6-luna'}})
         config = title.load_config(self.root)
         self.assertIsNone(title.naming_config(config)['service_tier'])
         self.assertEqual(config['service_tier'], 'priority')
 
     def test_naming_switch_checks_capabilities_and_leaves_archive_settings(self):
-        title.atomic_json(self.path, {'future': 1, 'naming': {'future': 2}})
+        title.atomic_json(self.path, {'model': 'gpt-5.6-luna', 'future': 1, 'naming': {'future': 2}})
         code, result, validate = self.configure('--naming-model', 'gpt-6-luna', '--naming-reasoning-effort', 'medium', '--naming-service-tier', 'fast')
         self.assertEqual(code, 0)
         self.assertEqual((result['model'], result['reasoning_effort'], result['service_tier']), ('gpt-5.6-luna', 'low', 'priority'))
@@ -63,6 +63,52 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual(result['future'], 1)
         selected = validate.call_args.args[1]
         self.assertEqual((selected['model'], selected['reasoning_effort']), ('gpt-6-luna', 'medium'))
+
+    def test_new_default_and_explicit_old_model_are_shared_with_archive(self):
+        config = title.load_config(self.root)
+        self.assertEqual(config['model'], 'gpt-6-luna')
+        self.assertEqual(title.naming_config(config)['model'], 'gpt-6-luna')
+        title.atomic_json(self.path, {'model': 'gpt-5.6-luna'})
+        config = title.load_config(self.root)
+        self.assertEqual(config['model'], 'gpt-5.6-luna')
+        self.assertEqual(title.naming_config(config)['model'], 'gpt-5.6-luna')
+
+    def test_shared_switch_validates_top_level_and_existing_naming_override(self):
+        title.atomic_json(self.path, {'model': 'gpt-5.6-luna', 'future': 1,
+                                    'naming': {'model': 'custom', 'service_tier': None}})
+        code, result, validate = self.configure('--model', 'gpt-6-luna', '--service-tier', 'fast')
+        self.assertEqual(code, 0)
+        self.assertEqual([call.args[1]['model'] for call in validate.call_args_list], ['gpt-6-luna', 'custom'])
+        self.assertEqual(result['naming'], {'model': 'custom', 'service_tier': None})
+        self.assertEqual(result['future'], 1)
+
+    def test_rejected_shared_or_effective_configuration_never_writes(self):
+        for args, failures in ((['--model', 'unknown'], [ValueError('模型不可用')]),
+                               (['--service-tier', 'fast'], [ValueError('档位不可用')]),
+                               (['--model', 'gpt-6-luna', '--service-tier', 'fast'],
+                                [None, ValueError('命名覆盖不可用')])):
+            title.atomic_json(self.path, {'model': 'gpt-5.6-luna', 'naming': {'model': 'custom'}})
+            before = self.path.read_bytes()
+            with self.subTest(args=args), patch.dict(os.environ, {'OIL_CODEX_TITLE_DATA': str(self.root)}), \
+                 patch.object(sys, 'argv', ['title', 'configure', *args]), \
+                 patch.object(title, 'find_codex', return_value='fixture-codex'), \
+                 patch.object(title, 'CodexBackend'), \
+                 patch.object(title, 'validate_model_config', side_effect=failures), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(title.main(), 1)
+            self.assertEqual(before, self.path.read_bytes())
+
+    def test_shared_configuration_identical_to_naming_checks_catalog_once(self):
+        code, result, validate = self.configure('--model', 'gpt-6-luna', '--service-tier', 'fast')
+        self.assertEqual(code, 0)
+        validate.assert_called_once()
+        self.assertEqual(result['model'], 'gpt-6-luna')
+
+    def test_binary_only_configuration_does_not_query_model_catalog(self):
+        code, result, validate = self.configure('--codex-bin', 'fixture-codex')
+        self.assertEqual(code, 0)
+        validate.assert_not_called()
+        self.assertEqual(result['codex_bin'], 'fixture-codex')
 
     def test_cli_naming_switch_clears_existing_fast(self):
         title.atomic_json(self.path, {'naming': {'model': 'old', 'service_tier': 'priority'}})
@@ -120,7 +166,7 @@ class BudgetAndTelemetryTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
         self.backend = fixtures.FakeBackend()
-        self.config = {**title.DEFAULTS, 'model_timeout_seconds': 10,
+        self.config = {**title.DEFAULTS, 'model': 'gpt-5.6-luna', 'model_timeout_seconds': 10,
                        'naming': {'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'service_tier': None}}
         self.now = 0
         self.timeouts, self.commands = [], []

@@ -23,7 +23,7 @@ from usage_ledger import usage_scope, usage_report, record_duration, timed_call,
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULTS = {
     "enabled": True,
-    "model": "gpt-5.6-luna",
+    "model": "gpt-6-luna",
     "service_tier": "priority",
     "reasoning_effort": "low",
     "codex_bin": None,
@@ -624,10 +624,16 @@ def main():
                     if args.naming_service_tier:
                         naming["service_tier"] = "priority" if args.naming_service_tier == "fast" else None
                     changes["naming"] = naming
-                    selected = naming_config(DEFAULTS | changes)
-                    validate_settings(selected)
+                selected = DEFAULTS | changes
+                effective = naming_config(selected)
+                validate_settings(selected)
+                validate_settings(effective)
+                if any((args.model, args.service_tier, args.naming_model,
+                        args.naming_reasoning_effort, args.naming_service_tier)):
                     with CodexBackend(find_codex(changes.get("codex_bin", config["codex_bin"]))) as backend:
                         validate_model_config(backend, selected)
+                        if any(effective[k] != selected[k] for k in MODEL_KEYS):
+                            validate_model_config(backend, effective)
             atomic_json(config_path, changes)
             print(json.dumps(load_config(root), ensure_ascii=False))
             return 0
